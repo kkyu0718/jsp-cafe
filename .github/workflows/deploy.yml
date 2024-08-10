@@ -56,6 +56,38 @@ jobs:
             echo "Disk space after cleanup:"
             df -h
 
+            echo "Setting up swap memory..."
+            # 스왑 파일 생성 (2GB)
+            if [ ! -f /swapfile ]; then
+              sudo fallocate -l 2G /swapfile
+              sudo chmod 600 /swapfile
+              sudo mkswap /swapfile
+              sudo swapon /swapfile
+              echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+            else
+              echo "Swap file already exists."
+            fi
+
+            echo "Checking swap status:"
+            free -h
+
+            echo "Checking Docker daemon status..."
+            if ! systemctl is-active --quiet docker; then
+              echo "Docker daemon is not running. Starting Docker..."
+              sudo systemctl start docker
+            fi
+
+            echo "Docker daemon status:"
+            sudo systemctl status docker
+
+            echo "Cleaning up Docker resources..."
+            sudo docker system prune -af --volumes
+
+            echo "Final system status:"
+            df -h
+            free -h
+            docker info
+            
             # 환경 변수 설정
             REPO_DIR=~/jsp-cafe
             BRANCH=main
