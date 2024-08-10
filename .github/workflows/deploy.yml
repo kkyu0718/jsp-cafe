@@ -47,6 +47,7 @@ jobs:
             fi
             
             git checkout $BRANCH
+            git pull origin $BRANCH
 
             echo "Building Docker image..."
             sudo docker build --cache-from $DOCKER_IMAGE -t $DOCKER_IMAGE .
