@@ -18,14 +18,10 @@ jobs:
           script: |
             set -e  # 오류 발생 시 스크립트 중단
             
-            echo "Checking memory status..."
+            echo "Checking initial system status..."
             free -h
-
-            echo "Checking swap status..."
-            swapon --show
-
-            echo "Checking current disk space..."
             df -h
+            sudo swapon --show
 
             echo "Cleaning up system resources..."
             # 로그 파일 정리 (중요 시스템 로그 제외)
@@ -34,30 +30,13 @@ jobs:
               ! -name "syslog" \
               ! -name "kern.log" \
               -delete
-
-            # 빈 로그 디렉토리 정리
             sudo find /var/log -type d -empty -delete
-
-            # apt 캐시 정리
             sudo apt-get clean
             sudo apt-get autoremove -y
-
-            # 임시 파일 정리
             sudo rm -rf /tmp/*
-
-            # 사용하지 않는 커널 제거
             sudo apt-get autoremove --purge -y
 
-            echo "Cleaning up Docker resources..."
-            
-            # Docker 시스템 정리
-            sudo docker system prune -af --volumes
-
-            echo "Disk space after cleanup:"
-            df -h
-
             echo "Setting up swap memory..."
-            # 스왑 파일 생성 (2GB)
             if [ ! -f /swapfile ]; then
               sudo fallocate -l 2G /swapfile
               sudo chmod 600 /swapfile
@@ -68,34 +47,26 @@ jobs:
               echo "Swap file already exists."
             fi
 
-            echo "Checking swap status:"
-            free -h
-
             echo "Checking Docker daemon status..."
             if ! systemctl is-active --quiet docker; then
               echo "Docker daemon is not running. Starting Docker..."
               sudo systemctl start docker
             fi
-
-            echo "Docker daemon status:"
             sudo systemctl status docker
 
             echo "Cleaning up Docker resources..."
-            sudo docker system prune -af --volumes
+            sudo docker system prune -af --volumes || echo "Docker cleanup failed, but continuing..."
 
-            echo "Final system status:"
-            df -h
+            echo "System status after cleanup:"
             free -h
-            docker info
-            
+            df -h
+            sudo docker info
+
             # 환경 변수 설정
             REPO_DIR=~/jsp-cafe
             BRANCH=main
             DOCKER_IMAGE=jsp-cafe:latest
             CONTAINER_PORT=8080
-
-            echo "Cleaning up Docker resources..."
-            sudo docker system prune -af --volumes || echo "Docker cleanup failed, but continuing..."
 
             echo "Stopping and removing existing containers..."
             CONTAINER_IDS=$(sudo docker ps -q --filter publish=$CONTAINER_PORT)
@@ -115,7 +86,6 @@ jobs:
               git clone https://github.com/kkyu0718/jsp-cafe.git $REPO_DIR
               cd $REPO_DIR
             fi
-            
             git checkout $BRANCH
             git pull origin $BRANCH
 
@@ -125,12 +95,15 @@ jobs:
             echo "Running new container..."
             NEW_CONTAINER_ID=$(sudo docker run -d -p $CONTAINER_PORT:$CONTAINER_PORT --add-host=host.docker.internal:host-gateway $DOCKER_IMAGE)
 
-            echo "New container ID: $NEW_CONTAINER_ID"
-            
-            # 새 컨테이너가 정상적으로 시작되었는지 확인
             if [ -z "$NEW_CONTAINER_ID" ]; then
               echo "Failed to start new container"
               exit 1
             fi
 
+            echo "New container ID: $NEW_CONTAINER_ID"
             echo "Deployment completed successfully"
+
+            echo "Final system status:"
+            free -h
+            df -h
+            sudo docker ps
