@@ -24,6 +24,9 @@ jobs:
             echo "Checking swap status..."
             swapon --show
 
+            echo "Checking current disk space..."
+            df -h
+
             echo "Cleaning up system resources..."
             # 로그 파일 정리 (중요 시스템 로그 제외)
             sudo find /var/log -type f \( -name "*.log" -o -name "*.gz" \) \
@@ -34,6 +37,24 @@ jobs:
 
             # 빈 로그 디렉토리 정리
             sudo find /var/log -type d -empty -delete
+
+            # apt 캐시 정리
+            sudo apt-get clean
+            sudo apt-get autoremove -y
+
+            # 임시 파일 정리
+            sudo rm -rf /tmp/*
+
+            # 사용하지 않는 커널 제거
+            sudo apt-get autoremove --purge -y
+
+            echo "Cleaning up Docker resources..."
+            
+            # Docker 시스템 정리
+            sudo docker system prune -af --volumes
+
+            echo "Disk space after cleanup:"
+            df -h
 
             # 환경 변수 설정
             REPO_DIR=~/jsp-cafe
