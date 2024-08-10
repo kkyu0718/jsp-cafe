@@ -17,6 +17,23 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e  # 오류 발생 시 스크립트 중단
+            
+            echo "Checking memory status..."
+            free -h
+
+            echo "Checking swap status..."
+            swapon --show
+
+            echo "Cleaning up system resources..."
+            # 로그 파일 정리 (중요 시스템 로그 제외)
+            sudo find /var/log -type f \( -name "*.log" -o -name "*.gz" \) \
+              ! -name "auth.log" \
+              ! -name "syslog" \
+              ! -name "kern.log" \
+              -delete
+
+            # 빈 로그 디렉토리 정리
+            sudo find /var/log -type d -empty -delete
 
             # 환경 변수 설정
             REPO_DIR=~/jsp-cafe
