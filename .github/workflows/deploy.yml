@@ -17,40 +17,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e  # 오류 발생 시 스크립트 중단
-            echo "Checking current swap memory..."
-            free -h
-            swapon --show
-
-            # 원하는 스왑 크기 
-            DESIRED_SWAP_SIZE=10G
-
-            # 현재 스왑 크기 확인
-            CURRENT_SWAP_SIZE=$(free -g | awk '/Swap:/ { print $2 }')
-
-            if [ "$CURRENT_SWAP_SIZE" -lt "${DESIRED_SWAP_SIZE%G}" ]; then
-              echo "Increasing swap size to $DESIRED_SWAP_SIZE..."
-            
-              # 기존 스왑 파일 비활성화 및 삭제
-              sudo swapoff -a
-              sudo rm -f /swapfile
-
-              # 새 스왑 파일 생성
-              sudo fallocate -l $DESIRED_SWAP_SIZE /swapfile
-              sudo chmod 600 /swapfile
-              sudo mkswap /swapfile
-              sudo swapon /swapfile
-
-              # /etc/fstab 업데이트 (이미 있다면 수정하지 않음)
-              if ! grep -q "/swapfile none swap sw 0 0" /etc/fstab; then
-                echo "/swapfile none swap sw 0 0" | sudo tee -a /etc/fstab
-              fi
-
-              echo "Swap size increased. New swap configuration:"
-              free -h
-              swapon --show
-            else
-              echo "Current swap size is sufficient."
-            fi
             
             echo "Checking memory status..."
             free -h
