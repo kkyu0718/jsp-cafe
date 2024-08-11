@@ -28,7 +28,7 @@ function addAnswer(e) {
                     comment.contents,
                     comment.id
                 );
-                $(".qna-comment-slipp-articles form.submit-write").before(formattedTemplate); // Append each new comment before the comment form
+                $(".qna-comment-slipp-articles").prepend(formattedTemplate); // Append each new comment before the comment form
             });
 
             $("textarea[name=contents]").val(""); // Clear the textarea
