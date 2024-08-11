@@ -21,15 +21,15 @@ function addAnswer(e) {
             // Assuming the response is in JSON format with necessary data
             var answerTemplate = $("#answerTemplate").html();
 
-            data.forEach(function (comment) {
-                var formattedTemplate = answerTemplate.format(
-                    comment.writer.name,
-                    comment.createdAt,
-                    comment.contents,
-                    comment.id
-                );
-                $(".qna-comment-slipp-articles").prepend(formattedTemplate); // Append each new comment before the comment form
-            });
+
+            var formattedTemplate = answerTemplate.format(
+                    data.writer.name,
+                    data.createdAt,
+                    data.contents,
+                    data.id
+            );
+            $(".qna-comment-slipp-articles").prepend(formattedTemplate); // Append each new comment before the comment form
+
 
             $("textarea[name=contents]").val(""); // Clear the textarea
         },
@@ -114,72 +114,16 @@ function deletePost(e) {
     });
 }
 
-function loadComments() {
-    $.ajax({
-        url: `/api/posts/${postId}/comments?page=${currentPage}&size=15`,
-        method: 'GET',
-        success: function (response) {
-            const comments = response.content;
-            comments.forEach(comment => {
-                $('#commentList').append(`
-                    <article class="article" id="${comment.id}">
-                        <div class="article-header">
-                            <div class="article-header-thumb">
-                                <img src="https://graph.facebook.com/v2.3/1324855987/picture" class="article-author-thumb" alt="">
-                            </div>
-                            <div class="article-header-text">
-                                <a href="#" class="article-author-name">${comment.writer.name}</a>
-                                <div class="article-header-time">${comment.createdAt}</div>
-                            </div>
-                        </div>
-                        <div class="article-doc comment-doc">
-                            <p>${comment.contents}</p>
-                        </div>
-                        <ul class="article-util-list">
-                            <li>
-                                <form class="delete-answer-form" action="/posts/${postId}/comments/${comment.id}" method="POST">
-                                    <input type="hidden" name="_method" value="DELETE">
-                                    <button type="submit" class="delete-answer-button">삭제</button>
-                                </form>
-                            </li>
-                        </ul>
-                    </article>
-                `);
-            });
-
-            if (!response.last) {
-                $('#loadMoreComments').show();
-            } else {
-                $('#loadMoreComments').hide();
-            }
-
-            currentPage++;
-        },
-        error: function (error) {
-            console.error('댓글을 불러오는 데 실패했습니다:', error);
-        }
-    });
-}
-
-let lastCommentId = 0;
-const limit = 5;
-
-document.addEventListener('DOMContentLoaded', function () {
-    const commentList = document.querySelectorAll('#commentList .article');
-    if (commentList.length > 0) {
-        lastCommentId = commentList[commentList.length - 1].id;
-    }
-
-    const loadMoreButton = document.getElementById('loadMoreComments');
-    if (loadMoreButton) {
-        loadMoreButton.addEventListener('click', loadMoreComments);
-    }
-});
-
 function loadMoreComments() {
     const postId = document.querySelector('form.submit-write').action.split('/').slice(-2)[0];
+    const commentList = document.getElementById('commentList');
+    const limit = 15;
 
-    console.log(lastCommentId)
+    // Get the ID of the last comment in the list
+    const lastComment = commentList.lastElementChild;
+    lastCommentId = lastComment ? lastComment.id : 0;
+
+    console.log(lastCommentId);
 
     fetch(`/posts/${postId}/comments?lastCommentId=${lastCommentId}&limit=${limit}`)
         .then(response => response.json())
@@ -190,7 +134,6 @@ function loadMoreComments() {
                     const commentHtml = createCommentHtml(comment, postId);
                     commentList.insertAdjacentHTML('beforeend', commentHtml);
                 });
-                lastCommentId = comments[comments.length - 1].id;
             } else {
                 const loadMoreButton = document.getElementById('loadMoreComments');
                 if (loadMoreButton) {
@@ -240,6 +183,6 @@ $(document).ready(function () {
     $("#editPostLink").on("click", editPost);
 
     $("#loadMoreComments").click(function () {
-        loadComments();
+        loadMoreComments();
     })
 });
