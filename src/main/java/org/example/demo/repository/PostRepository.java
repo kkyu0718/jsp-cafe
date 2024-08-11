@@ -218,6 +218,37 @@ public class PostRepository {
         return posts;
     }
 
+    public List<Post> getPagedPostWithCoveringIndex(long page, int limit) {
+        List<Post> posts = new ArrayList<>();
+        String sql = "SELECT p.*, u.user_id, u.name " +
+                "FROM ( " +
+                "    SELECT id, writer_id, created_at " +
+                "    FROM posts " +
+                "    WHERE is_present = true " +
+                "    ORDER BY created_at DESC " +
+                "    LIMIT ? OFFSET ? " +
+                ") AS subquery " +
+                "JOIN posts p ON subquery.id = p.id " +
+                "JOIN users u ON p.writer_id = u.id " +
+                "ORDER BY p.created_at DESC";
+
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, limit);
+            pstmt.setLong(2, (page - 1) * limit);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    posts.add(createPostFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error fetching paged posts", e);
+        }
+        return posts;
+    }
+
     public int getTotalPostCount() {
         String sql = "SELECT COUNT(*) as cnt FROM posts p WHERE p.is_present = true";
         int cnt = 0;
