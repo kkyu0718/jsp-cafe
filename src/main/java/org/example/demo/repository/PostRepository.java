@@ -33,11 +33,11 @@ public class PostRepository {
                 "    SELECT *\n" +
                 "    FROM comments\n" +
                 "    WHERE post_id = ? AND is_present = true\n" +
-                "    ORDER BY created_at DESC\n" +
                 "    LIMIT 5\n" +
                 ") c ON p.id = c.post_id\n" +
                 "LEFT JOIN users cu ON c.writer_id = cu.id\n" +
-                "WHERE p.id = ?";
+                "WHERE p.id = ? " +
+                "ORDER BY c.created_at DESC";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, postId);
