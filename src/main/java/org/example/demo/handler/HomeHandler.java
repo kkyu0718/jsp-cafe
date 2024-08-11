@@ -27,7 +27,7 @@ public class HomeHandler {
         logger.info("page: {}, limit: {}", page, limit);
         logger.info("totalPages: {}", totalPages);
 
-        request.setAttribute("posts", postRepository.getPostsPaged(page, limit));
+        request.setAttribute("posts", postRepository.getPagedPostWithCoveringIndex(page, limit));
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.getRequestDispatcher("/WEB-INF/index.jsp").forward(request, response);
