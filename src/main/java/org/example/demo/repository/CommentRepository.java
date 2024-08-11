@@ -149,7 +149,7 @@ public class CommentRepository {
 
     public List<Comment> getPagedComments(long postId, long lastCommentId, int limit) {
         List<Comment> comments = new ArrayList<>();
-        String sql = "SELECT c.*, u.user_id, u.name FROM comments c JOIN users u ON c.writer_id = u.id WHERE c.post_id = ? AND c.id > ? ORDER BY c.created_at desc LIMIT ?";
+        String sql = "SELECT c.*, u.user_id, u.name FROM comments c JOIN users u ON c.writer_id = u.id WHERE c.post_id = ? AND c.id < ? AND c.is_present=true ORDER BY c.created_at desc LIMIT ?";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, postId);
