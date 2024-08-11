@@ -130,7 +130,7 @@ public class CommentRepository {
         String sql = "SELECT c.*, u.user_id, u.name " +
                 "FROM comments c " +
                 "JOIN users u ON c.writer_id = u.id " +
-                "WHERE c.post_id = ? AND c.id > ? AND c.is_present = true " +
+                "WHERE c.post_id = ? AND c.id < ? AND c.is_present = true " +
                 "ORDER BY c.created_at DESC;";
 
         try (Connection conn = dbConfig.getConnection();
