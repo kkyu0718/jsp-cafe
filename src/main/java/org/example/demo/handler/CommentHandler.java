@@ -43,18 +43,12 @@ public class CommentHandler {
                 contents
         ));
 
-        // 업데이트된 comment 반환
-        List<Comment> updatedComments = new ArrayList<>();
-        updatedComments.add(comment);
-        updatedComments.addAll(getUpdatedComments(postId, comment.getId()));
-
         logger.info("Comment created: {}", comment);
-        logger.info("Updated comments: {}", updatedComments);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         try {
-            response.getWriter().write(objectMapper.writeValueAsString(updatedComments));
+            response.getWriter().write(objectMapper.writeValueAsString(comment));
         } catch (Exception e) {
             logger.error("Error writing response", e);
         }
